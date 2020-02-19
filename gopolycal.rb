@@ -10,7 +10,7 @@ APPLICATION_NAME = "GoPolyCal".freeze
 CREDENTIALS_PATH = "credentials.json".freeze
 TOKEN_PATH = "token.yaml".freeze
 SCOPE = "https://www.googleapis.com/auth/calendar"
-@calendar_id = "primary"
+@calendar_id = "kelly.crabbe@gmail.com"
 
 ##
 # Ensure valid credentials, either by restoring from the saved credentials
