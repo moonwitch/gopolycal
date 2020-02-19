@@ -4,14 +4,13 @@ require "googleauth/stores/file_token_store"
 require "date"
 require "fileutils"
 
+# Credential Vars
 OOB_URI = "urn:ietf:wg:oauth:2.0:oob".freeze
 APPLICATION_NAME = "GoPolyCal".freeze
 CREDENTIALS_PATH = "credentials.json".freeze
-# The file token.yaml stores the user's access and refresh tokens, and is
-# created automatically when the authorization flow completes for the first
-# time.
 TOKEN_PATH = "token.yaml".freeze
-SCOPE = Google::Apis::CalendarV3::AUTH_CALENDAR
+SCOPE = "https://www.googleapis.com/auth/calendar"
+@calendar_id = "primary"
 
 ##
 # Ensure valid credentials, either by restoring from the saved credentials
@@ -38,20 +37,75 @@ def authorize
 end
 
 # Initialize the API
-service = Google::Apis::CalendarV3::CalendarService.new
-service.client_options.application_name = APPLICATION_NAME
-service.authorization = authorize
+@service = Google::Apis::CalendarV3::CalendarService.new
+@service.client_options.application_name = APPLICATION_NAME
+@service.authorization = authorize
 
-# Fetch the next 10 events for the user
-calendar_id = "primary"
-response = service.list_events(calendar_id,
-   max_results:   10,
-   single_events: true,
-   order_by:      "startTime",
-   time_min:      DateTime.now.rfc3339)
-puts "Upcoming events:"
-puts "No upcoming events found" if response.items.empty?
-response.items.each do |event|
-  start = event.start.date || event.start.date_time
-  puts "- #{event.summary} (#{start})"
+def create_event(event_summary,event_location,event_description,event_start_time,event_end_time)
+  event = Google::Apis::CalendarV3::Event.new(
+    summary: event_summary,
+    location: event_location,
+    description: event_description,
+    start: Google::Apis::CalendarV3::EventDateTime.new(
+      date_time: DateTime.strptime(event_start_time, '%Y-%m-%d %H:%M'),
+      time_zone: 'Europe/Brussels'
+    ),
+    end: Google::Apis::CalendarV3::EventDateTime.new(
+      date_time: DateTime.strptime(event_end_time, '%Y-%m-%d %H:%M'),
+      time_zone: 'Europe/Brussels'
+    ),
+    recurrence: [
+      'RRULE:FREQ=DAILY;COUNT=2'
+    ],
+    attendees: [
+      Google::Apis::CalendarV3::EventAttendee.new(
+        email: 'lpage@example.com'
+      ),
+      Google::Apis::CalendarV3::EventAttendee.new(
+        email: 'sbrin@example.com'
+      )
+    ],
+    reminders: Google::Apis::CalendarV3::Event::Reminders.new(
+      use_default: false,
+      overrides: [
+        Google::Apis::CalendarV3::EventReminder.new(
+          reminder_method: 'email',
+          minutes: 24 * 60
+        ),
+        Google::Apis::CalendarV3::EventReminder.new(
+          reminder_method: 'popup',
+          minutes: 10
+        )
+      ]
+    )
+  )
+
+  result = service.insert_event(calendar_id, event)
+  puts "Event created: #{result.html_link}"
+end
+
+def list_events
+  response = @service.list_events(@calendar_id,
+     max_results:   10,
+     single_events: true,
+     order_by:      "startTime",
+     time_min:      DateTime.now.rfc3339)
+  puts "Upcoming events:"
+  puts "No upcoming events found" if response.items.empty?
+  response.items.each do |event|
+    start = event.start.date || event.start.date_time
+    puts "- #{event.summary} (#{start})"
+  end
+end
+
+if ARGV.empty?
+  list_events
+else
+  #create_event(ARGV[0],ARGV[1],ARGV[2],ARGV[3],ARGV[4],ARGV[5])
+  puts ARGV[0]
+  puts ARGV[1]
+  puts ARGV[2]
+  puts ARGV[3]
+  puts ARGV[4]
+  puts ARGV[5]
 end
