@@ -3,9 +3,26 @@ A first attempt to use Google Calendar from Polybar utilizing the API.
 
 ***Please note this is _not_ usable in its current state. It is a proof of concept and study repository.***
 
+## Requirements
+
+- polybar
+  ```
+  baph -i polybar
+  pacman -S polybar
+  ```
+
+- gem: google-api-client
+  ```
+  gem install google-api-client
+  ```
+
+
 ## Install
 
-[sudo] gem install 'google_calendar'
+```
+git clone http://github.com/moonwitch/gopolycal.git
+```
+
 
 ## Setup
 
